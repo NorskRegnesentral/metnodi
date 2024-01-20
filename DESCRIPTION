@@ -1,0 +1,10 @@
+Package: metnodi
+Type: Package
+Title: Data interface with MET Norway
+Version: 0.0.0.9000
+Author: Claudio
+Maintainer: Claudio Heinrich-Mertsching <claudio@nr.no>
+Description: The package loads weather data from met Norway for target locations and saves it as netcdf.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
