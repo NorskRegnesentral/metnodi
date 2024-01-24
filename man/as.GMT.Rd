@@ -6,6 +6,9 @@
 \usage{
 as.GMT(x)
 }
+\arguments{
+\item{x}{object that can be converted to POSIXct.}
+}
 \description{
 Convert to POSIXct with the right timezone
 }
@@ -13,5 +16,6 @@ Convert to POSIXct with the right timezone
 as.GMT('2024-01-01')
 as.GMT('2024-01-01 04:00:30')
 as.GMT(Sys.time())
+
 
 }

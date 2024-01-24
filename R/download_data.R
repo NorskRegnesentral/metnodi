@@ -5,7 +5,7 @@
 #' The resulting netcdf contains the loaded weather variables and as dimension index a `coord_index` which identifies the coordinate.
 #' It moreover has variables `lon`,`lat` (indexed by `coord_index`) for retrieving the actual coordinate, as well as
 #' `lon_metno`, `lat_metno`, the center coordinate for the associate met Nordic gridcell.
-#' Nearest neighbor matching is performed by \code{\link{get_metno_gridcells}}.
+#' Nearest neighbor matching is performed by \code{\link{get_metno_gridcells_nn}}.
 #'
 #' @param file_out,out_dir file name and directory for saving the results. `file_out` needs to end on `'.nc'`.
 #' @inheritParams get_analysis_fns
@@ -73,7 +73,7 @@ download_metno_analysis_nn = function(file_out,
 
   # warn when in interactive mode and download will take long:
   if(interactive() & (length(fns) * length(vars) > 500)){
-    choices = menu(choices = c('continue','abort'),title = 'The download will probably take longer than 5 minutes. Do you want to continue?')
+    choices = utils::menu(choices = c('continue','abort'),title = 'The download will probably take longer than 5 minutes. Do you want to continue?')
     if(choices != 1) stop('download aborted.')
   }
 
@@ -259,7 +259,7 @@ download_metno_analysis_nn = function(file_out,
 #' The resulting netcdf contains the loaded weather variables and as dimension index a `coord_index` which identifies the coordinate.
 #' It moreover has variables `lon`,`lat` (indexed by `coord_index`) for retrieving the actual coordinate, as well as
 #' `lon_metno`, `lat_metno`, the center coordinate for the associate met Nordic gridcell.
-#' Nearest neighbor matching is performed by \code{\link{get_metno_gridcells}}.
+#' Nearest neighbor matching is performed by \code{\link{get_metno_gridcells_rect}}.
 #'
 #' @param file_out,out_dir file name and directory for saving the results. `file_out` needs to end on `'.nc'`.
 #' @inheritParams get_analysis_fns
@@ -308,7 +308,7 @@ download_metno_analysis_rect = function(file_out,
 
   # warn when in interactive mode and download will take long:
   if(interactive() & (length(fns) * length(vars) > 500)){
-    choices = menu(choices = c('continue','abort'),title = 'The download will probably take longer than 5 minutes. Do you want to continue?')
+    choices = utils::menu(choices = c('continue','abort'),title = 'The download will probably take longer than 5 minutes. Do you want to continue?')
     if(choices != 1) stop('download aborted.')
   }
 

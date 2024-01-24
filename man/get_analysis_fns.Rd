@@ -21,18 +21,18 @@ This differs from \code{as.POSIXct} which by default uses the timezone of the ma
 }
 \examples{
 # time range:
-get_analysis_fns(time_start = "2023-09-01 01:23:45", time_end =  "2023-09-30")
+fns1 = get_analysis_fns(time_start = "2023-09-01 01:23:45", time_end =  "2023-09-30")
 
 # selected times:
 times = c(as.GMT('2024-01-03 01:23:45'), as.GMT('2024-02-03 00:12:34'))
-get_analysis_fns(time_start = times)
+fns2 = get_analysis_fns(time_start = times)
 
 # selected dates:
 
 dates = seq(as.Date('2024-01-01'), Sys.Date(), by = 1)
-get_analysis_fns(time_start = dates) # ALL time stamps for these dates are loaded
-                                    # (not only the midnight time stamps,
-                                    # which would be the case if the dates
-                                    # are simply converted to times).
+fns = get_analysis_fns(time_start = dates) # ALL time stamps for these dates are loaded
+                                          # (not only the midnight time stamps,
+                                          # which would be the case if the dates
+                                          # are simply converted to times).
 
 }

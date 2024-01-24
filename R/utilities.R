@@ -2,17 +2,22 @@
 # For R CMD check:
 .datatable.aware = TRUE
 
+lat = lat_metno = lon = lon_metno = vector_ind = x_ind = y_ind = . = NULL
+
 
 #'
 #' Convert to POSIXct with the right timezone
-#' @export
+#'
+#' @param x object that can be converted to POSIXct.
 #' @examples
 #' as.GMT('2024-01-01')
 #' as.GMT('2024-01-01 04:00:30')
 #' as.GMT(Sys.time())
 #'
+#'
 #' @import data.table
 #' @import ncdf4
+#' @export
 
 as.GMT = function(x) {return(as.POSIXct(x, tz = "GMT", origin = "1970-01-01") |> lubridate::with_tz(tzone = "GMT"))}
 
@@ -31,7 +36,7 @@ date_hours = function(dates)
 {
   ret_val = c()
   for(dd in dates){
-    t0 = as.GMT(dd)
+    t0 = as.GMT(as.Date(dd,origin = '1970-01-01'))
     ret_val = c(ret_val, seq(t0,t0 + 23.5*60*60,by = '1 hour'))
   }
 
@@ -43,7 +48,7 @@ date_hours = function(dates)
 
 #' In which data streams does a time stamp exist
 #'
-#' @description The analyses datasets are organized in three data streams (latest, operational archive, rerun archive), see [https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset] for details.
+#' @description The analyses datasets are organized in three data streams (latest, operational archive, rerun archive), see [met Nordic documentation](https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset) for details.
 #' These functions check which of the provided timestamps exist in one of the three data streams.
 #'
 #' @param time A vector of times
@@ -100,19 +105,19 @@ exists_ts_rerun_archive = function(time){
 #'
 #'@examples
 #'# time range:
-#'get_analysis_fns(time_start = "2023-09-01 01:23:45", time_end =  "2023-09-30")
+#' fns1 = get_analysis_fns(time_start = "2023-09-01 01:23:45", time_end =  "2023-09-30")
 #'
 #'# selected times:
 #' times = c(as.GMT('2024-01-03 01:23:45'), as.GMT('2024-02-03 00:12:34'))
-#'get_analysis_fns(time_start = times)
+#' fns2 = get_analysis_fns(time_start = times)
 #'
 #'# selected dates:
 #'
-#'dates = seq(as.Date('2024-01-01'), Sys.Date(), by = 1)
-#'get_analysis_fns(time_start = dates) # ALL time stamps for these dates are loaded
-#'                                     # (not only the midnight time stamps,
-#'                                     # which would be the case if the dates
-#'                                     # are simply converted to times).
+#' dates = seq(as.Date('2024-01-01'), Sys.Date(), by = 1)
+#'fns = get_analysis_fns(time_start = dates) # ALL time stamps for these dates are loaded
+#'                                           # (not only the midnight time stamps,
+#'                                           # which would be the case if the dates
+#'                                           # are simply converted to times).
 #'
 #'@export
 
@@ -122,7 +127,7 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
   # get an hourly time-vector:
 
   # for dates get all time-stamp during those dates:
-  if(is.null(time_end) & is.Date(time_start)){
+  if(is.null(time_end) & lubridate::is.Date(time_start)){
     times = date_hours(time_start)
   } else if(is.null(time_end)){
     times = as.GMT(time_start)

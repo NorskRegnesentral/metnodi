@@ -36,7 +36,7 @@ This function takes a data table of coordinates and downloads the met nordic hou
 The resulting netcdf contains the loaded weather variables and as dimension index a \code{coord_index} which identifies the coordinate.
 It moreover has variables \code{lon},\code{lat} (indexed by \code{coord_index}) for retrieving the actual coordinate, as well as
 \code{lon_metno}, \code{lat_metno}, the center coordinate for the associate met Nordic gridcell.
-Nearest neighbor matching is performed by \code{\link{get_metno_gridcells}}.
+Nearest neighbor matching is performed by \code{\link{get_metno_gridcells_nn}}.
 }
 \examples{
 \dontrun{

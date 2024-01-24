@@ -19,7 +19,7 @@ exists_ts_rerun_archive(time)
 logical of the same length as \code{time}
 }
 \description{
-The analyses datasets are organized in three data streams (latest, operational archive, rerun archive), see \link{https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset} for details.
+The analyses datasets are organized in three data streams (latest, operational archive, rerun archive), see \href{https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset}{met Nordic documentation} for details.
 These functions check which of the provided timestamps exist in one of the three data streams.
 }
 \examples{
