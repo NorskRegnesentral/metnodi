@@ -46,7 +46,7 @@ lat_min = 58
 lat_max = 62
 
 time_start = "2024-01-01"
-time_start = "2024-01-05"
+time_end = "2024-01-05"
 
 # download all available data in this area and store it in a temporary file:
 
