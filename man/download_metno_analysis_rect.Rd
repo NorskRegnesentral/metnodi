@@ -30,10 +30,9 @@ If \code{TRUE} (the default), the rerun archive is used (which uses one consiste
 }
 \description{
 This function takes a data table of coordinates and downloads the met nordic hourly analysis for these locations and a specified timerange and saves it as netcdf.
-The resulting netcdf contains the loaded weather variables and as dimension index a \code{coord_index} which identifies the coordinate.
-It moreover has variables \code{lon},\code{lat} (indexed by \code{coord_index}) for retrieving the actual coordinate, as well as
-\code{lon_metno}, \code{lat_metno}, the center coordinate for the associate met Nordic gridcell.
-Nearest neighbor matching is performed by \code{\link{get_metno_gridcells_rect}}.
+The resulting netcdf contains the loaded weather variables and the original \code{x}, \code{y} coordinates from the met Nordic netcdf (subset to the considered region).
+It moreover has variables \code{lon_metno}, \code{lat_metno}, the center coordinate for the associate met Nordic gridcell. The cut-out rectangle is rectangular in Met Nordics x-y coordinate system
+(not in lon/lat), so the function downloads and saves slightly more data than you're asking for.
 }
 \examples{
 \dontrun{
