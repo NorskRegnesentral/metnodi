@@ -5,6 +5,11 @@ Version: 0.0.0.9000
 Author: Claudio
 Maintainer: Claudio Heinrich-Mertsching <claudio@nr.no>
 Description: The package loads weather data from met Norway for target locations and saves it as netcdf.
+  See <https://github.com/metno/NWPdocs/wiki> for details on the met Nordic data.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+Depends: data.table,
+  ncdf4
+RoxygenNote: 7.2.3
