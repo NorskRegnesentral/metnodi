@@ -252,7 +252,7 @@ get_metno_gridcells_nn = function(coords,max_dist = 1.5)
     ret_dt[(as.numeric(dists) > max_dist),c('x_ind','y_ind','vector_ind','lon_metno','lat_metno') := NA]
   }
 
-  return(ret_dt)
+  return(ret_dt[])
 }
 
 #' Function for getting met Nordic gridcells in a rectangle area
@@ -274,8 +274,6 @@ get_metno_gridcells_rect = function(bbox)
 {
   sg_nc = ncdf4::nc_open(system.file("extdata", "spatial_grid.nc", package="metnodi"))
 
-  bbox = c(0,60,10,65)
-
   lons_nc = ncvar_get(sg_nc,'lon')
   lats_nc = ncvar_get(sg_nc,'lat')
 
@@ -292,7 +290,7 @@ get_metno_gridcells_rect = function(bbox)
   ret_dt[,lon_metno := lons_nc[vector_ind]]
   ret_dt[,lat_metno := lats_nc[vector_ind]]
 
-  return(ret_dt)
+  return(ret_dt[])
 }
 
 
