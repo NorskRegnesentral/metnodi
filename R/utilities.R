@@ -294,6 +294,35 @@ get_metno_gridcells_rect = function(bbox)
 }
 
 
+#' Function to attempt opening a NetCDF file with exponential backoff
+#' @param url URL of netcdf file
+#' @param max_retries Number of retries. We wait 2^(n-1) secs after the nth try.
+#' @export
+
+open_netcdf_from_url_with_backoff = function(url, max_retries = 10) {
+  attempt = 1
+  while (attempt <= max_retries) {
+    tryCatch({
+      # Attempt to open the NetCDF file
+      nc = nc_open(url)
+      # If successful, return the file handle
+      return(nc)
+    }, error = function(e) {
+      if (attempt == max_retries) {
+        # If maximum retries reached, stop with an error
+        stop("Failed to open NetCDF file after ", max_retries, " attempts.")
+      } else {
+        # On failure, print the error and wait for the next attempt
+        message(paste("Attempt", attempt, "failed. Error:", e$message))
+        delay = 2^(attempt - 1) # Calculate delay with exponential backoff
+        message(paste("Waiting", delay, "seconds before retrying..."))
+        Sys.sleep(delay) # Wait before retrying
+        attempt <- attempt + 1
+      }
+    })
+  }
+}
+
 #' Names of available weather variables
 #'
 #' "precipitation_amount_quantiles" and "precipitation_amount_gt" are excluded - they seem to only be available for some of the analysis products

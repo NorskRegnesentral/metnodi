@@ -85,7 +85,7 @@ download_metno_analysis_nn = function(file_out,
 
     fn = fns[i]
 
-    nc = nc_open(fn)
+    nc = open_netcdf_from_url_with_backoff(fn)
 
     if(i == 1){
       ### which variables to write? ###
@@ -319,7 +319,7 @@ download_metno_analysis_rect = function(file_out,
 
     fn = fns[i]
 
-    nc = nc_open(fn)
+    nc = open_netcdf_from_url_with_backoff(fn)
 
     if(i == 1){
       ### which variables to write? ###
