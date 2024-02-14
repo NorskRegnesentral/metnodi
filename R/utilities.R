@@ -46,6 +46,22 @@ date_hours = function(dates)
 }
 
 
+#' Auxiliary for estimating the size of the written netcdf file
+#'
+#' Returns an estimate in Megabytes.
+#' @param nloc number of loaded gridcells
+#' @param ntime number of loaded time-slizes
+#' @param nvars number of loaded variables
+
+
+est_fileout_size = function(nloc,ntime,nvars){
+  fs_in_byte = 15967.3 + 8 * nloc + 8 * ntime + 4*nloc*ntime*nvars # This was derived on rectangle-data, but it seems to work good enough for nn as well
+  return(fs_in_byte/10^6)
+}
+
+
+
+
 #' In which data streams does a time stamp exist
 #'
 #' @description The analyses datasets are organized in three data streams (latest, operational archive, rerun archive), see [met Nordic documentation](https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset) for details.
@@ -137,7 +153,11 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
     }
   } else {
     time_start = as.GMT(time_start)[1]
-    time_end = as.GMT(time_end)
+    if(lubridate::is.Date(time_end)){
+      time_end = tail(date_hours(time_end),1)
+    } else{
+      time_end = as.GMT(time_end)
+      }
     times = seq.POSIXt(time_start, time_end, by = "1 hour")
     if(! all(c(second(times),minute(times),second(time_end),minute(time_end)) == 0)){
       warning("The times contain non-zero minutes and/or seconds, but the data is hourly. Times are rounded down to the next-lower full hour.")
@@ -322,6 +342,103 @@ open_netcdf_from_url_with_backoff = function(url, max_retries = 10) {
     })
   }
 }
+
+
+
+#' Separates filenames into named lists
+#'
+#' Auxiliary function used in the download in order to group downloads by year, month, day, or hour.
+#' Takes download filenames and a level to group by, returns a named list.
+#'
+#' @param fns filenames of download files
+#' @param level Either `'year'`, `'month'`, `'day'` or `'hour'`.
+
+separate_fns = function(fns,level){
+
+  ret_list = list()
+  if(level == 'year') {
+    present_ys = unique(year(time_from_fn(fns)))
+    for(i in seq_along(present_ys)){
+      yy = present_ys[i]
+      fns_temp = fns[year(time_from_fn(fns)) == yy]
+      append_list = list(fns_temp)
+      names(append_list) = yy
+      ret_list = c(ret_list,append_list)
+    }
+  }
+  if(level == 'month') {
+    ym_dt = unique(data.table(year = year(time_from_fn(fns)),month = month(time_from_fn(fns))))
+    for(i in 1:ym_dt[,.N]){
+      yy = ym_dt[i,year]
+      mm = ym_dt[i,month]
+      fns_temp = fns[year(time_from_fn(fns)) == yy &
+                       month(time_from_fn(fns)) == mm]
+      append_list = list(fns_temp)
+      names(append_list) = paste0(yy,'-',ifelse(mm<10,yes = paste0('0',mm),no = mm))
+      ret_list = c(ret_list,append_list)
+    }
+  }
+
+  if(level == 'day') {
+    ymd_dt = unique(data.table(year = year(time_from_fn(fns)),
+                               month = month(time_from_fn(fns)),
+                               day = mday(time_from_fn(fns))))
+    for(i in 1:ymd_dt[,.N]){
+      yy = ymd_dt[i,year]
+      mm = ymd_dt[i,month]
+      dd = ymd_dt[i,day]
+      fns_temp = fns[year(time_from_fn(fns)) == yy &
+                       month(time_from_fn(fns)) == mm &
+                       mday(time_from_fn(fns)) == dd]
+      append_list = list(fns_temp)
+      names(append_list) = paste0(yy,'-',
+                                  ifelse(mm<10,yes = paste0('0',mm),no = mm),'-',
+                                  ifelse(dd<10,yes = paste0('0',dd),no = dd))
+      ret_list = c(ret_list,append_list)
+    }
+  }
+
+  if(level == 'hour') {
+    ymdh_dt = unique(data.table(year = year(time_from_fn(fns)),
+                                month = month(time_from_fn(fns)),
+                                day = mday(time_from_fn(fns)),
+                                hour = hour(time_from_fn(fns))))
+    for(i in 1:ymdh_dt[,.N]){
+      yy = ymdh_dt[i,year]
+      mm = ymdh_dt[i,month]
+      dd = ymdh_dt[i,day]
+      hh = ymdh_dt[i,hour]
+      fns_temp = fns[year(time_from_fn(fns)) == yy &
+                       month(time_from_fn(fns)) == mm &
+                       mday(time_from_fn(fns)) == dd &
+                       hour(time_from_fn(fns)) == hh ]
+      append_list = list(fns_temp)
+      names(append_list) = paste0(yy,'-',
+                                  ifelse(mm<10,yes = paste0('0',mm),no = mm),'-',
+                                  ifelse(dd<10,yes = paste0('0',dd),no = dd),'-',
+                                  ifelse(hh<10,yes = paste0('0',hh),no = hh))
+      ret_list = c(ret_list,append_list)
+    }
+  }
+
+  return(ret_list)
+}
+
+
+
+#' Get a POSIXct from a download-filename
+#'
+#' @param fns Vector of file names of the online netcdfs
+#' @export
+
+time_from_fn = function(fns){
+  pos_start = nchar(fns) - 14
+  pos_stop = nchar(fns) - 3
+  time_str = substr(fns,start = pos_start,stop = pos_stop)
+  times = as.POSIXct(time_str,format = "%Y%m%dT%HZ",tz = "GMT")
+  return(times)
+}
+
 
 #' Names of available weather variables
 #'

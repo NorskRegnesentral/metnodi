@@ -2,7 +2,8 @@
 % Please edit documentation in R/download_data.R
 \name{download_metno_analysis_nn}
 \alias{download_metno_analysis_nn}
-\title{Download Met Nordic data for selected coordinates}
+\alias{download_metno_analysis_rect}
+\title{Download Met Nordic analysis data}
 \usage{
 download_metno_analysis_nn(
   file_out,
@@ -12,11 +13,34 @@ download_metno_analysis_nn(
   time_end = NULL,
   use_rerun = TRUE,
   vars = weather_variables(),
-  discard_missing_locations = TRUE
+  discard_missing_locations = TRUE,
+  save_resolution = "auto",
+  max_filesize_in_MB = 1000,
+  fns = NULL,
+  nfiles = NULL,
+  start_at = 0
+)
+
+download_metno_analysis_rect(
+  file_out,
+  out_dir,
+  bbox,
+  time_start,
+  time_end = NULL,
+  use_rerun = TRUE,
+  vars = weather_variables(),
+  save_resolution = "auto",
+  max_filesize_in_MB = 1000,
+  fns = NULL,
+  nfiles = NULL,
+  start_at = 0
 )
 }
 \arguments{
-\item{file_out, out_dir}{file name and directory for saving the results. \code{file_out} needs to end on \code{'.nc'}.}
+\item{file_out, out_dir}{file name and directory for saving the results.
+If everything is saved as single file (see details), a .nc file is created in \code{out_dir}.
+Else, if multiple output files need to be created, a new directory \code{file_out} (without .nc) is created in \code{out_dir},
+and the files are saved inside.}
 
 \item{coords}{A data table with columns \code{'lon'}, \code{'lat'}}
 
@@ -30,13 +54,33 @@ If \code{TRUE} (the default), the rerun archive is used (which uses one consiste
 \item{vars}{character vector of (weather) variables to load, see \code{\link{weather_variables}} to see all available variables.}
 
 \item{discard_missing_locations}{logical. If TRUE (the default), then coordinates not falling within the met Nordic area are discarded.}
+
+\item{save_resolution}{Either \code{auto}, \code{year}, \code{month}, \code{day}, or \code{hour}, see details.}
+
+\item{max_filesize_in_MB}{File size limit (in MB) for the saved netcdfs. Only used if \code{save_resolution == 'auto'}.}
+
+\item{fns, nfiles, start_at}{For internal use only. Keep at default.}
+
+\item{bbox}{numeric vector of length four giving the boundaries in the order \code{lon_min}, \code{lat_min}, \code{lon_max}, \code{lat_max}.}
 }
 \description{
-This function takes a data table of coordinates and downloads the met nordic hourly analysis for these locations and a specified timerange and saves it as netcdf.
+These functions download the MET Nordic analysis data.
+
+The function \code{download_metno_analysis_nn} takes a data table of coordinates and downloads the analysis data for the nearest-neighbor gridcells.
 The resulting netcdf contains the loaded weather variables and as dimension index a \code{coord_index} which identifies the coordinate.
 It moreover has variables \code{lon},\code{lat} (indexed by \code{coord_index}) for retrieving the actual coordinate, as well as
 \code{lon_metno}, \code{lat_metno}, the center coordinate for the associate met Nordic gridcell.
-Nearest neighbor matching is performed by \code{\link{get_metno_gridcells_nn}}.
+Nearest neighbor matching is performed by \code{\link[=get_metno_gridcells_nn]{get_metno_gridcells_nn()}}.
+
+\code{download_metno_analysis_rect} downloads the data for a rectangular region specified by \code{bbox}.
+}
+\details{
+The loaded data is saved either as single file or as yearly-, monthly-, daily-, or hourly files.
+The save format is determined by \code{save_resolution}. This can be either \code{year}, \code{month}, \code{day}, or \code{hour}
+(forcing the corresponding format), or \code{auto} (the default). When \code{auto} is selected, the files are saved in
+the largest format, such that single files remain (approximately) below the max size specified by \code{max_filesize_in_MB}.
+In particular, if you want to force to save everything in a single file, you can set \code{save_resolution = 'auto'} and
+\code{max_filesize_in_MB = Inf} (but of course this may crash).
 }
 \examples{
 \dontrun{
@@ -48,6 +92,12 @@ download_metno_analysis_nn(file_out = 'oslo_ch_prec_20240101.nc',
                            coords = coords,
                            time_start = 2024-01-01,
                            vars = 'precipitation_amount')
+
+ download_metno_analysis_rect(file_out = 'oslo_prec_20240101.nc',
+                              out_dir = tempdir(),
+                              bbox = c(8,58,12,62),
+                              time_start = 2024-01-01,
+                              vars = 'precipitation_amount')
 
 }
 
