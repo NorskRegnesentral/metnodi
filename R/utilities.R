@@ -321,8 +321,9 @@ get_metno_gridcells_rect = function(bbox)
 
 open_netcdf_from_url_with_backoff = function(url, max_retries = 10) {
   attempt = 1
-  while (attempt <= max_retries) {
-    tryCatch({
+  nc = NULL
+  while (is.null(nc) & attempt <= max_retries) {
+    nc = tryCatch({
       # Attempt to open the NetCDF file
       nc = nc_open(url)
       # If successful, return the file handle
@@ -337,9 +338,10 @@ open_netcdf_from_url_with_backoff = function(url, max_retries = 10) {
         delay = 2^(attempt - 1) # Calculate delay with exponential backoff
         message(paste("Waiting", delay, "seconds before retrying..."))
         Sys.sleep(delay) # Wait before retrying
-        attempt <- attempt + 1
+        return(NULL)
       }
     })
+    if(is.null(nc)) attempt = attempt + 1
   }
 }
 
