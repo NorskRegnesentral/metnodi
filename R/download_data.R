@@ -272,7 +272,7 @@ download_metno_analysis_nn = function(file_out,
         }
 
       }
-
+      nc_close(nc) # important for not having too many open files
     }
 
 
@@ -536,7 +536,7 @@ download_metno_analysis_rect = function(file_out,
         }
 
       }
-
+      nc_close(nc)
     }
 
     # fix time dimension variable:
