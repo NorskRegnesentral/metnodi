@@ -69,6 +69,7 @@ download_metno_analysis_nn = function(file_out,
 
 {
   file_out = paste0(gsub('.nc','',file_out),'.nc') # for resilience, if filename does not end on .nc
+  dir.create(out_dir,showWarnings = FALSE,recursive = TRUE)
 
   message('getting nearest neighbors...')
   gridcells = get_metno_gridcells_nn(coords = coords)
@@ -353,6 +354,7 @@ download_metno_analysis_rect = function(file_out,
 
 {
   file_out = paste0(gsub('.nc','',file_out),'.nc') # for resilience, if filename does not end on .nc
+  dir.create(out_dir,showWarnings = FALSE,recursive = TRUE)
 
   gridcells = get_metno_gridcells_rect(bbox = bbox)
 
@@ -536,6 +538,13 @@ download_metno_analysis_rect = function(file_out,
         }
 
       }
+
+      # extract coordinates once:
+      if(i == 1)
+      {
+        lonmetnos = ncvar_get(nc = nc,varid = 'longitude',start = c(x_start,y_start),count = c(x_length,y_length))
+        latmetnos = ncvar_get(nc = nc,varid = 'latitude',start = c(x_start,y_start),count = c(x_length,y_length))
+      }
       nc_close(nc)
     }
 
@@ -575,10 +584,10 @@ download_metno_analysis_rect = function(file_out,
 
     ncvar_put(nc = nc_out,
               varid = nc_lonmetno,
-              vals = ncvar_get(nc = nc,varid = 'longitude',start = c(x_start,y_start),count = c(x_length,y_length))) # use latest open netcdf, should be fine because they should all be the same
+              vals = lonmetnos) # use latest open netcdf, should be fine because they should all be the same
     ncvar_put(nc = nc_out,
               varid = nc_latmetno,
-              vals = ncvar_get(nc = nc,varid = 'latitude',start = c(x_start,y_start),count = c(x_length,y_length)))
+              vals = latmetnos)
 
     for(var_ind in variable_indices){
 
