@@ -140,10 +140,17 @@ exists_ts_rerun_archive = function(time){
 
 get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
 {
+  # we have to deal with dates differently than with times, but both can be provided as character.
+  # That means we have to recognize whether a character is date-character or time-character:
+  is_date = function(d){
+    return((lubridate::is.Date(d) | (is.character(d) & nchar(d) <= 10)))
+  }
+
+  # dates are sometimes given as characters
   # get an hourly time-vector:
 
   # for dates get all time-stamp during those dates:
-  if(is.null(time_end) & lubridate::is.Date(time_start)){
+  if(is.null(time_end) & is_date(time_start)){
     times = date_hours(time_start)
   } else if(is.null(time_end)){
     times = as.GMT(time_start)
@@ -153,7 +160,7 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
     }
   } else {
     time_start = as.GMT(time_start)[1]
-    if(lubridate::is.Date(time_end)){
+    if(is_date(time_end)){
       time_end = tail(date_hours(time_end),1)
     } else{
       time_end = as.GMT(time_end)
