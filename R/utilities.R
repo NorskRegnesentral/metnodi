@@ -143,7 +143,7 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
   # we have to deal with dates differently than with times, but both can be provided as character.
   # That means we have to recognize whether a character is date-character or time-character:
   is_date = function(d){
-    return((lubridate::is.Date(d) | (is.character(d) & nchar(d) <= 10)))
+    return((lubridate::is.Date(d[1]) | (is.character(d[1]) & nchar(d[1]) <= 10)))
   }
 
   # dates are sometimes given as characters
