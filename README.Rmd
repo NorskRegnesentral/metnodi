@@ -21,7 +21,9 @@ knitr::opts_chunk$set(
 The goal of metnodi is to provide an interface to the met Nordic data (metnodi stands for met Nordic data interface).
 For a detailed description of this data and links to the original source please see the [met Nordic github page](https://github.com/metno/NWPdocs/wiki).
 Currently, the package merely simplifies the download of targeted weather data from thredds.met.no, and saves this data in convenient netcdf format.
-It supports downloading and combining data for a time range (original format is one separate file per hour), and for target locations or a rectangular area.
+It supports downloading for target locations (finding the nearest neighbor gridcells of the MET Nordic data), or a rectangular area (in lon/lat).
+Moreover, downloads are pooled in time into either daily-, monthly-, yearly- or a single file, depending on the size of the downloaded area. This format is more convenient to work with than the original format, which is a single netcdf per hour. The package also has a function to plot the downloaded data.
+
 
 ## Installation
 
@@ -39,6 +41,8 @@ This is a basic example which shows you how to download data:
 ```{r example, eval = FALSE}
 library(metnodi)
 
+### downloading a rectangular area ###
+
 # area around Oslo
 lon_min = 8
 lon_max = 12
@@ -48,7 +52,7 @@ lat_max = 62
 time_start = "2024-01-01"
 time_end = "2024-01-05"
 
-# download all available data in this area and store it in a temporary file:
+# download all available weather variables in this area and store it in a temporary file:
 
 download_metno_analysis_rect(file_out = 'oslo_weather_202401.nc', 
                              out_dir = tempdir(),
@@ -56,8 +60,11 @@ download_metno_analysis_rect(file_out = 'oslo_weather_202401.nc',
                              time_start = time_start,
                              time_end = time_end)
 
-# download precipitation for specific locations:
+### downloading data for specific locations ###
 
+# Here, we only download precipitation. Use weather_variables() to see the names of all available weather variables 
+
+# some locations in the area around Oslo:
 coords = data.table(lon = runif(50,min = lon_min, max = lon_max),
                     lat = runif(50,min = lat_min, max = lat_max))
 
@@ -68,5 +75,5 @@ download_metno_analysis_nn(file_out = 'oslo_weather_202401.nc',
                            time_end = time_end,
                            vars = 'precipitation_amount')
 
-# use weather_variables() to see the names of all weather variables provided by met Nordic
+
 ```

@@ -596,6 +596,9 @@ download_metno_analysis_rect = function(file_out,
                 vals = get(paste0("var_vals_",var_ind)))
     }
 
+    ncatt_put(nc = nc_out, 0, attname = 'proj4str',
+              attval = '+proj=lcc +lat_0=63 +lon_0=15 +lat_1=63 +lat_2=63 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +pm=0 +no_defs +units=m')
+
     nc_close(nc_out)
   }
 }
