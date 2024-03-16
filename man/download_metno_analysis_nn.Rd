@@ -51,11 +51,11 @@ a vector of hourly time stamps can be provided as \code{time_start} (if \code{ti
 see the \href{https://github.com/metno/NWPdocs/wiki/MET-Nordic-dataset}{met Nordic data documentation} for details.
 If \code{TRUE} (the default), the rerun archive is used (which uses one consistent analysis), else the operational archive is used.}
 
-\item{vars}{character vector of (weather) variables to load, see \code{\link{weather_variables}} to see all available variables.}
+\item{vars}{character vector of (weather) variables to load, see \code{\link[=weather_variables]{weather_variables()}} to see all available variables.}
 
 \item{discard_missing_locations}{logical. If TRUE (the default), then coordinates not falling within the met Nordic area are discarded.}
 
-\item{save_resolution}{Either \code{auto}, \code{year}, \code{month}, \code{day}, or \code{hour}, see details.}
+\item{save_resolution}{Either \code{"auto"}, \code{"year"}, \code{"month"}, \code{"day"}, or \code{"hour"}, see details.}
 
 \item{max_filesize_in_MB}{File size limit (in MB) for the saved netcdfs. Only used if \code{save_resolution == 'auto'}.}
 
