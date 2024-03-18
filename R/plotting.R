@@ -55,7 +55,7 @@ gmaps_plot = function(st,
 
   if(is.character(downsample)){
     max_pix = readr::parse_number(downsample) * 1000
-    downsample = ceiling(sqrt(dim(st)['x']*dim(st)['y']/max_pix))-1
+    downsample = ceiling(sqrt(dim(st)[1]*dim(st)[2]/max_pix))-1
     if(downsample > 0) message('Downsampling = ',downsample)
   }
 
