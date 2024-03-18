@@ -169,41 +169,42 @@ download_metno_analysis_nn = function(file_out,
 
       fn = fns[i]
 
-      nc = open_netcdf_from_url_with_backoff(fn)
-      #nc = nc_open(fn)
+      #nc = open_netcdf_from_url_with_backoff(fn)
+      nc = nc_open(fn)
+
+      ### which variables to write? ###
+
+      variable_indices = match(vars,names(nc$var))
+      if(any(is.na(variable_indices))){
+        na_vars = which(is.na(variable_indices))
+        warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
+        vars = vars[-na_vars]
+        variable_indices = variable_indices[-na_vars]
+      }
+
+      # get all required dimension variables
+      all_dimvars = names(nc$dim)
+
+      # which ones do we need?
+      req_dimvars = c()
+      for(ind in variable_indices){
+        ldv = length(nc$var[[ind]]$dim)
+        for(j in 1:ldv){
+          req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
+        }
+      }
+      req_dimvars = unique(req_dimvars)
+
+      new_dimvars = c('coord_index',setdiff(req_dimvars,c('x','y')))
+
+
+      # get other dimvars directly from netcdf:
+
+      for(dv in setdiff(req_dimvars,c('x','y'))){
+        assign(paste0('nc_',dv),nc$dim[[dv]])
+      }
+
       if(i == 1){
-        ### which variables to write? ###
-
-        variable_indices = match(vars,names(nc$var))
-        if(any(is.na(variable_indices))){
-          na_vars = which(is.na(variable_indices))
-          warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
-          vars = vars[-na_vars]
-          variable_indices = variable_indices[-na_vars]
-        }
-
-        # get all required dimension variables
-        all_dimvars = names(nc$dim)
-
-        # which ones do we need?
-        req_dimvars = c()
-        for(ind in variable_indices){
-          ldv = length(nc$var[[ind]]$dim)
-          for(j in 1:ldv){
-            req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
-          }
-        }
-        req_dimvars = unique(req_dimvars)
-
-        new_dimvars = c('coord_index',setdiff(req_dimvars,c('x','y')))
-
-
-        # get other dimvars directly from netcdf:
-
-        for(dv in setdiff(req_dimvars,c('x','y'))){
-          assign(paste0('nc_',dv),nc$dim[[dv]])
-        }
-
         if("time" %in% req_dimvars) {
           nc_time$len = length(fns)
           time_vals = nc_time$vals
@@ -439,46 +440,47 @@ download_metno_analysis_rect = function(file_out,
       nc = open_netcdf_from_url_with_backoff(fn)
       #nc = nc_open(fn)
 
+
+      ### which variables to write? ###
+
+      variable_indices = match(vars,names(nc$var))
+      if(any(is.na(variable_indices))){
+        na_vars = which(is.na(variable_indices))
+        warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
+        vars = vars[-na_vars]
+        variable_indices = variable_indices[-na_vars]
+      }
+
+      # get all required dimension variables
+      all_dimvars = names(nc$dim)
+
+      # which ones do we need?
+      req_dimvars = c()
+      for(ind in variable_indices){
+        ldv = length(nc$var[[ind]]$dim)
+        for(j in 1:ldv){
+          req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
+        }
+      }
+      req_dimvars = unique(req_dimvars)
+
+
+      # get dimvars directly from netcdf:
+
+      for(dv in req_dimvars){
+        assign(paste0('nc_',dv),nc$dim[[dv]])
+      }
+
+      # truncate space accordingly:
+      if("x" %in% req_dimvars){
+        nc_x$vals = nc_x$vals[x_start:gridcells[,max(x_ind)]]
+        nc_x$len = length(nc_x$vals)
+
+        nc_y$vals = nc_y$vals[y_start:gridcells[,max(y_ind)]]
+        nc_y$len = length(nc_y$vals)
+      }
+
       if(i == 1){
-        ### which variables to write? ###
-
-        variable_indices = match(vars,names(nc$var))
-        if(any(is.na(variable_indices))){
-          na_vars = which(is.na(variable_indices))
-          warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
-          vars = vars[-na_vars]
-          variable_indices = variable_indices[-na_vars]
-        }
-
-        # get all required dimension variables
-        all_dimvars = names(nc$dim)
-
-        # which ones do we need?
-        req_dimvars = c()
-        for(ind in variable_indices){
-          ldv = length(nc$var[[ind]]$dim)
-          for(j in 1:ldv){
-            req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
-          }
-        }
-        req_dimvars = unique(req_dimvars)
-
-
-        # get dimvars directly from netcdf:
-
-        for(dv in req_dimvars){
-          assign(paste0('nc_',dv),nc$dim[[dv]])
-        }
-
-        # truncate space accordingly:
-        if("x" %in% req_dimvars){
-          nc_x$vals = nc_x$vals[x_start:gridcells[,max(x_ind)]]
-          nc_x$len = length(nc_x$vals)
-
-          nc_y$vals = nc_y$vals[y_start:gridcells[,max(y_ind)]]
-          nc_y$len = length(nc_y$vals)
-        }
-
         if("time" %in% req_dimvars) {
           nc_time$len = length(fns)
           time_vals = nc_time$vals
