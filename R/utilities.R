@@ -456,8 +456,15 @@ time_from_fn = function(fns){
 #' weather_variables()
 #' @export
 
-weather_variables = function() return(c('air_pressure_at_sea_level','air_temperature_2m','cloud_area_fraction','integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time','integral_of_surface_downwelling_longwave_flux_in_air_wrt_time',
-                                        'precipitation_amount','relative_humidity_2m','wind_speed_10m','wind_direction_10m'))
+weather_variables = function() return(c('air_pressure_at_sea_level',
+                                        'air_temperature_2m',
+                                        'cloud_area_fraction',
+                                        'integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time',
+                                        #'integral_of_surface_downwelling_longwave_flux_in_air_wrt_time', Left out, because it only exists for some times
+                                        'precipitation_amount',
+                                        'relative_humidity_2m',
+                                        'wind_speed_10m',
+                                        'wind_direction_10m'))
 
 #' Names of all variables we can potentially get from netcdfs
 #' @examples

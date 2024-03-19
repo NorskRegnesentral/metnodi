@@ -68,6 +68,7 @@ download_metno_analysis_nn = function(file_out,
                                       fns = NULL, nfiles = NULL, start_at = 0)
 
 {
+
   file_out = paste0(gsub('.nc','',file_out),'.nc') # for resilience, if filename does not end on .nc
   dir.create(out_dir,showWarnings = FALSE,recursive = TRUE)
 
@@ -172,44 +173,42 @@ download_metno_analysis_nn = function(file_out,
       #nc = open_netcdf_from_url_with_backoff(fn)
       nc = nc_open(fn)
 
-      ### which variables to write? ###
-
-      variable_indices = match(vars,names(nc$var))
-      if(any(is.na(variable_indices))){
-        na_vars = which(is.na(variable_indices))
-        warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
-        vars = vars[-na_vars]
-        variable_indices = variable_indices[-na_vars]
-      }
-
-      # get all required dimension variables
-      all_dimvars = names(nc$dim)
-
-      # which ones do we need?
-      req_dimvars = c()
-      for(ind in variable_indices){
-        ldv = length(nc$var[[ind]]$dim)
-        for(j in 1:ldv){
-          req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
-        }
-      }
-      req_dimvars = unique(req_dimvars)
-
-      new_dimvars = c('coord_index',setdiff(req_dimvars,c('x','y')))
-
-
-      # get other dimvars directly from netcdf:
-
-      for(dv in setdiff(req_dimvars,c('x','y'))){
-        assign(paste0('nc_',dv),nc$dim[[dv]])
-      }
+      ### fix dimvars from first file ###
 
       if(i == 1){
-        if("time" %in% req_dimvars) {
+        # get all required dimension variables
+        all_dimvars = names(nc$dim)
+
+        # which ones do we need?
+        req_dimvars = c()
+        for(vv in vars){
+          ldv = length(nc$var[[vv]]$dim)
+          for(j in 1:ldv){
+            req_dimvars = c(req_dimvars,nc$var[[vv]]$dim[[j]]$name)
+          }
+        }
+        req_dimvars = unique(req_dimvars)
+
+
+        # get dimvars directly from netcdf:
+
+        for(dv in req_dimvars){
+          assign(paste0('nc_',dv),nc$dim[[dv]])
+        }
+
+        # truncate space accordingly:
+        if("x" %in% req_dimvars){
+          nc_x$vals = nc_x$vals[x_start:gridcells[,max(x_ind)]]
+          nc_x$len = length(nc_x$vals)
+
+          nc_y$vals = nc_y$vals[y_start:gridcells[,max(y_ind)]]
+          nc_y$len = length(nc_y$vals)
+        }
+
+        if("time" %in% req_dimvars){
           nc_time$len = length(fns)
           time_vals = nc_time$vals
         }
-
       }
 
       # append times:
@@ -218,6 +217,21 @@ download_metno_analysis_nn = function(file_out,
         time_vals = c(time_vals,nc$dim$time$vals)
       }
 
+
+      ### which variables to write? ###
+
+      variable_indices = match(vars,names(nc$var))
+      # This fundamentally assumes that the same variables are contained in all netcdfs, which is not the case
+      if(any(is.na(variable_indices))){
+        na_vars = which(is.na(variable_indices))
+        stop(paste(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist in at least one of the files."),
+                   "Run all_variables() to see all available variable names.",
+                   "Currently, the package does not support downloading variables that exist only in some of the files,",
+                   "because that makes patching things together a lot harder.",
+                   "As far as I can tell, that only affects integral_of_surface_downwelling_longwave_flux_in_air_wrt_time."),sep = '\n')
+        #vars = vars[-na_vars]
+        #variable_indices = variable_indices[-na_vars]
+      }
 
       ### code for getting variable values: ###
 
@@ -253,7 +267,7 @@ download_metno_analysis_nn = function(file_out,
         }
 
         if(i == 1) {# initialize:
-          assign(paste0("var_vals_",var_ind),value = var_vals[index_mat]) # initialization
+          assign(paste0("var_vals_",vars[match(var_ind,variable_indices)]),value = var_vals[index_mat]) # initialization
           #initialize ncvar:
 
           dim_names_new = c('coord_index',setdiff(dim_names,c("x","y")))
@@ -261,16 +275,18 @@ download_metno_analysis_nn = function(file_out,
           dimlist = lapply(X = dim_names_new,FUN = function(x) get(paste0("nc_",x)))
 
           #define variable and put values:
-          assign(paste0('ncvar_',var_ind), value = ncvar_def(name = nc$var[[var_ind]]$name,
-                                                             units = nc$var[[var_ind]]$units,
-                                                             dim = dimlist,
-                                                             missval = nc$var[[var_ind]]$missval))
+          assign(paste0('ncvar_',vars[match(var_ind,variable_indices)]),
+                 value = ncvar_def(name = nc$var[[var_ind]]$name,
+                                   units = nc$var[[var_ind]]$units,
+                                   dim = dimlist,
+                                   missval = nc$var[[var_ind]]$missval))
 
 
         }
         if(i > 1) {
           #only append variable values:
-          assign(paste0("var_vals_",var_ind),value = c(get(paste0("var_vals_",var_ind)),var_vals[index_mat]))
+          assign(paste0("var_vals_",vars[match(var_ind,variable_indices)]),
+                 value = c(get(paste0("var_vals_",vars[match(var_ind,variable_indices)])),var_vals[index_mat]))
         }
 
       }
@@ -290,7 +306,7 @@ download_metno_analysis_nn = function(file_out,
 
       #fix time dimension variable
       if("time" %in% req_dimvars){
-        temp = get(paste0('ncvar_',var_ind))
+        temp = get(paste0('ncvar_',vars[match(var_ind,variable_indices)]))
         # which dim is time
         time_ind = 0
         for(j in seq_along(temp$dim)){
@@ -299,7 +315,7 @@ download_metno_analysis_nn = function(file_out,
 
         # overwrite
         temp$dim[[time_ind]]$vals = time_vals
-        assign(paste0('ncvar_',var_ind),temp)
+        assign(paste0('ncvar_',vars[match(var_ind,variable_indices)]),temp)
       }
     }
 
@@ -307,7 +323,7 @@ download_metno_analysis_nn = function(file_out,
 
     message('writing file ',file.path(out_dir,file_out))
 
-    var_list = c(lapply(variable_indices,function(x) get(paste0('ncvar_',x))),list(nc_lon,nc_lat,nc_lonmetno,nc_latmetno))
+    var_list = c(lapply(vars,function(x) get(paste0('ncvar_',x))),list(nc_lon,nc_lat,nc_lonmetno,nc_latmetno))
     nc_out = nc_create(filename = file.path(out_dir,file_out),vars = var_list)
 
     # put location information:
@@ -325,11 +341,11 @@ download_metno_analysis_nn = function(file_out,
               varid = nc_latmetno,
               vals = gridcells[,lat_metno])
 
-    for(var_ind in variable_indices){
+    for(vv in vars){
 
       ncvar_put(nc = nc_out,
-                varid = get(paste0('ncvar_',var_ind)),
-                vals = get(paste0("var_vals_",var_ind)))
+                varid = get(paste0('ncvar_',vv)),
+                vals = get(paste0("var_vals_",vv)))
     }
 
     nc_close(nc_out)
@@ -354,6 +370,7 @@ download_metno_analysis_rect = function(file_out,
                                         fns = NULL, nfiles = NULL, start_at = 0)
 
 {
+
   file_out = paste0(gsub('.nc','',file_out),'.nc') # for resilience, if filename does not end on .nc
   dir.create(out_dir,showWarnings = FALSE,recursive = TRUE)
 
@@ -437,55 +454,44 @@ download_metno_analysis_rect = function(file_out,
 
       fn = fns[i]
 
-      nc = open_netcdf_from_url_with_backoff(fn)
-      #nc = nc_open(fn)
+      nc = nc_open(fn)
 
-
-      ### which variables to write? ###
-
-      variable_indices = match(vars,names(nc$var))
-      if(any(is.na(variable_indices))){
-        na_vars = which(is.na(variable_indices))
-        warning(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist.\n Run all_variables() to see all variable names."))
-        vars = vars[-na_vars]
-        variable_indices = variable_indices[-na_vars]
-      }
-
-      # get all required dimension variables
-      all_dimvars = names(nc$dim)
-
-      # which ones do we need?
-      req_dimvars = c()
-      for(ind in variable_indices){
-        ldv = length(nc$var[[ind]]$dim)
-        for(j in 1:ldv){
-          req_dimvars = c(req_dimvars,nc$var[[ind]]$dim[[j]]$name)
-        }
-      }
-      req_dimvars = unique(req_dimvars)
-
-
-      # get dimvars directly from netcdf:
-
-      for(dv in req_dimvars){
-        assign(paste0('nc_',dv),nc$dim[[dv]])
-      }
-
-      # truncate space accordingly:
-      if("x" %in% req_dimvars){
-        nc_x$vals = nc_x$vals[x_start:gridcells[,max(x_ind)]]
-        nc_x$len = length(nc_x$vals)
-
-        nc_y$vals = nc_y$vals[y_start:gridcells[,max(y_ind)]]
-        nc_y$len = length(nc_y$vals)
-      }
+      ### fix dimvars ###
 
       if(i == 1){
-        if("time" %in% req_dimvars) {
+        # get all required dimension variables
+        all_dimvars = names(nc$dim)
+
+        # which ones do we need?
+        req_dimvars = c()
+        for(vv in vars){
+          ldv = length(nc$var[[vv]]$dim)
+          for(j in 1:ldv){
+            req_dimvars = c(req_dimvars,nc$var[[vv]]$dim[[j]]$name)
+          }
+        }
+        req_dimvars = unique(req_dimvars)
+
+
+        # get dimvars directly from netcdf:
+
+        for(dv in req_dimvars){
+          assign(paste0('nc_',dv),nc$dim[[dv]])
+        }
+
+        # truncate space accordingly:
+        if("x" %in% req_dimvars){
+          nc_x$vals = nc_x$vals[x_start:gridcells[,max(x_ind)]]
+          nc_x$len = length(nc_x$vals)
+
+          nc_y$vals = nc_y$vals[y_start:gridcells[,max(y_ind)]]
+          nc_y$len = length(nc_y$vals)
+        }
+
+        if("time" %in% req_dimvars){
           nc_time$len = length(fns)
           time_vals = nc_time$vals
         }
-
       }
 
       # append times:
@@ -495,12 +501,30 @@ download_metno_analysis_rect = function(file_out,
       }
 
 
+      ### which variables to write? ###
+
+      variable_indices = match(vars,names(nc$var))
+      if(any(is.na(variable_indices))){
+        na_vars = which(is.na(variable_indices))
+        stop(paste(paste0("The variable names '",paste(vars[na_vars],collapse = "', '"),"' do not exist in at least one of the files."),
+                   "Run all_variables() to see all available variable names.",
+                   "Currently, the package does not support downloading variables that exist only in some of the files,",
+                   "because that makes patching things together a lot harder.",
+                   "As far as I can tell, that only affects integral_of_surface_downwelling_longwave_flux_in_air_wrt_time."),sep = '\n')
+        #vars = vars[-na_vars]
+        #variable_indices = variable_indices[-na_vars]
+      }
+
       ### code for getting variable values: ###
 
       # spatial dimvar and information
 
-      nc_lonmetno = ncvar_def(name = 'lonmetno',units = 'degree longitude',longname = 'longitude of the center of the associated met Nordic gridcell',dim = list(nc_x,nc_y))
-      nc_latmetno = ncvar_def(name = 'latmetno',units = 'degree latitude',longname = 'latitude of the center of the associated met Nordic gridcell',dim = list(nc_x,nc_y))
+      nc_lonmetno = ncvar_def(name = 'lonmetno',units = 'degree longitude',
+                              longname = 'longitude of the center of the associated met Nordic gridcell',
+                              dim = list(nc_x,nc_y))
+      nc_latmetno = ncvar_def(name = 'latmetno',units = 'degree latitude',
+                              longname = 'latitude of the center of the associated met Nordic gridcell',
+                              dim = list(nc_x,nc_y))
 
       for(var_ind in variable_indices)
       {
@@ -521,22 +545,24 @@ download_metno_analysis_rect = function(file_out,
 
 
         if(i == 1) {# initialize:
-          assign(paste0("var_vals_",var_ind),value = var_vals) # initialization
+          assign(paste0("var_vals_",vars[match(var_ind,variable_indices)]),value = var_vals) # initialization
           #initialize ncvar:
 
           dimlist = lapply(X = dim_names,FUN = function(x) get(paste0("nc_",x)))
 
           #define variable:
-          assign(paste0('ncvar_',var_ind), value = ncvar_def(name = nc$var[[var_ind]]$name,
-                                                             units = nc$var[[var_ind]]$units,
-                                                             dim = dimlist,
-                                                             missval = nc$var[[var_ind]]$missval))
+          assign(paste0('ncvar_',vars[match(var_ind,variable_indices)]),
+                 value = ncvar_def(name = nc$var[[var_ind]]$name,
+                                   units = nc$var[[var_ind]]$units,
+                                   dim = dimlist,
+                                   missval = nc$var[[var_ind]]$missval))
 
 
         }
         if(i > 1) {
           #only append variable values:
-          assign(paste0("var_vals_",var_ind),value = c(get(paste0("var_vals_",var_ind)),var_vals))
+          assign(paste0("var_vals_",vars[match(var_ind,variable_indices)]),
+                 value = c(get(paste0("var_vals_",vars[match(var_ind,variable_indices)])),var_vals))
         }
 
       }
@@ -561,7 +587,7 @@ download_metno_analysis_rect = function(file_out,
 
       #fix time dimension variable (stored as part of the var)
       if("time" %in% req_dimvars){
-        temp = get(paste0('ncvar_',var_ind))
+        temp = get(paste0('ncvar_',vars[match(var_ind,variable_indices)]))
         # which dim is time
         time_ind = 0
         for(j in seq_along(temp$dim)){
@@ -570,7 +596,7 @@ download_metno_analysis_rect = function(file_out,
 
         # overwrite
         temp$dim[[time_ind]]$vals = time_vals
-        assign(paste0('ncvar_',var_ind),temp)
+        assign(paste0('ncvar_',vars[match(var_ind,variable_indices)]),temp)
       }
 
     }
@@ -579,7 +605,7 @@ download_metno_analysis_rect = function(file_out,
 
     message('writing file ',file.path(out_dir,file_out))
 
-    var_list = c(lapply(variable_indices,function(x) get(paste0('ncvar_',x))),list(nc_lonmetno,nc_latmetno))
+    var_list = c(lapply(vars,function(x) get(paste0('ncvar_',x))),list(nc_lonmetno,nc_latmetno))
     nc_out = nc_create(filename = file.path(out_dir,file_out),vars = var_list)
 
     # put location information:
@@ -591,11 +617,11 @@ download_metno_analysis_rect = function(file_out,
               varid = nc_latmetno,
               vals = latmetnos)
 
-    for(var_ind in variable_indices){
+    for(vv in vars){
 
       ncvar_put(nc = nc_out,
-                varid = get(paste0('ncvar_',var_ind)),
-                vals = get(paste0("var_vals_",var_ind)))
+                varid = get(paste0('ncvar_',vv)),
+                vals = get(paste0("var_vals_",vv)))
     }
 
     ncatt_put(nc = nc_out, 0, attname = 'proj4str',
