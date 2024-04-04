@@ -50,7 +50,7 @@ lat_min = 58
 lat_max = 62
 
 time_start = "2024-01-01"
-time_end = "2024-01-05"
+time_end = "2024-01-03"
 
 # download all available weather variables in this area and store it in a temporary file:
 
@@ -76,4 +76,11 @@ download_metno_analysis_nn(file_out = 'oslo_weather_202401.nc',
                            vars = 'precipitation_amount')
 
 
+### plotting ###
+
+st = read_stars_metno(paste0(tempdir(),'/oslo_weather_202401.nc'),var = 'precipitation_amount')
+pp = gmaps_plot(st) + ggplot2::scale_fill_gradient(name = 'mm',low = 'white',high = 'blue')
+plot(pp)
 ```
+![](~/pkg/metnodi/example_plot.png)
+
