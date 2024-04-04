@@ -78,6 +78,8 @@ download_metno_analysis_nn(file_out = 'oslo_weather_202401.nc',
 
 ### plotting ###
 
+# here we plot the first time-slice of precipitation downloaded above:
+
 st = read_stars_metno(paste0(tempdir(),'/oslo_weather_202401.nc'),var = 'precipitation_amount')
 pp = gmaps_plot(st) + ggplot2::scale_fill_gradient(name = 'mm',low = 'white',high = 'blue')
 plot(pp)
