@@ -79,4 +79,4 @@ pp = gmaps_plot(st) + ggplot2::scale_fill_gradient(name = 'mm',low = 'white',hig
 plot(pp)
 ```
 
-![](~/pkg/metnodi/example_plot.png)
+![](https://github.com/NorskRegnesentral/metnodi/blob/master/example_plot.png)

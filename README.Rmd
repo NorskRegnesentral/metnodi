@@ -82,5 +82,5 @@ st = read_stars_metno(paste0(tempdir(),'/oslo_weather_202401.nc'),var = 'precipi
 pp = gmaps_plot(st) + ggplot2::scale_fill_gradient(name = 'mm',low = 'white',high = 'blue')
 plot(pp)
 ```
-![](~/pkg/metnodi/example_plot.png)
+![](https://github.com/NorskRegnesentral/metnodi/blob/master/example_plot.png)
 
