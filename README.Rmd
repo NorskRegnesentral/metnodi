@@ -22,7 +22,8 @@ The goal of metnodi is to provide an interface to the met Nordic data (metnodi s
 For a detailed description of this data and links to the original source please see the [met Nordic github page](https://github.com/metno/NWPdocs/wiki).
 Currently, the package merely simplifies the download of targeted weather data from thredds.met.no, and saves this data in convenient netcdf format.
 It supports downloading for target locations (finding the nearest neighbor gridcells of the MET Nordic data), or a rectangular area (in lon/lat).
-Moreover, downloads are pooled in time into either daily-, monthly-, yearly- or a single file, depending on the size of the downloaded area. This format is more convenient to work with than the original format, which is a single netcdf per hour. The package also has a function to plot the downloaded data.
+Moreover, downloads are pooled in time into either daily-, monthly-, yearly- or a single file, depending on the size of the downloaded area. 
+This format is more convenient to work with than the original format, which is a single netcdf per hour. The package also has functions for plotting and loading the downloaded data.
 
 
 ## Installation

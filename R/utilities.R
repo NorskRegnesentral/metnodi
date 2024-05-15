@@ -82,9 +82,11 @@ est_fileout_size = function(nloc,ntime,nvars){
 #' @export
 
 exists_ts_latest = function(time){
-  time = as.GMT(time)
-  min_time = as.GMT(Sys.Date() - 2)
-  return(time >= min_time)
+  fns = which_files_exist_latest()
+  analysis_time_stamps = fns[grepl('analysis',fns)] |> tail(-1) # first element is always "latest", which we don't deal with right now
+  analysis_time_stamps = gsub("metpplatest/met_analysis_1_0km_nordic_","",analysis_time_stamps) |> gsub(pattern = '.nc',replacement = '')
+  analysis_time_stamps = as.POSIXct(analysis_time_stamps, tz = 'GMT',format = "%Y%m%dT%HZ")
+  return(time %in% analysis_time_stamps)
 }
 
 #' @rdname exists_ts_latest
@@ -93,7 +95,9 @@ exists_ts_latest = function(time){
 exists_ts_operational_archive = function(time){
   time = as.GMT(time)
   min_time = as.GMT("2018-03-01")
-  return(time >= min_time)
+  max_time = as.GMT(Sys.Date()-2)
+  return(time %between% c(min_time,max_time) | exists_ts_latest(time)) # We assume that, for time stamps 2 days ago or less from today, the same timestamps are available in latest and operational archive
+                                                                       # (seems to be the case).
 }
 
 #' @rdname exists_ts_latest
@@ -138,7 +142,7 @@ exists_ts_rerun_archive = function(time){
 #'@export
 
 
-get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
+get_analysis_fns = function(time_start, time_end = NULL, use_rerun = TRUE)
 {
   # we have to deal with dates differently than with times, but both can be provided as character.
   # That means we have to recognize whether a character is date-character or time-character:
@@ -199,6 +203,10 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
 
   message(mstr)
 
+  if(any(!latest & !operational_archive & !rerun_archive)) {
+    warning("For some of the provided timestamps I could not find Data. I am downloading what's there.")
+  }
+
   # for correct string-format of months,days,hours:
   number_str = function(numbers)
   {
@@ -211,6 +219,7 @@ get_analysis_fns = function(time_start,time_end = NULL,use_rerun = TRUE)
   fn0 =  "https://thredds.met.no/thredds/dodsC/"
   for(i in seq_along(times))
   {
+    if(!latest[i] & !operational_archive[i] & !rerun_archive[i]) next
     timestampstr = paste0(year(times[i]),number_str(month(times[i])),number_str(mday(times[i])),'T',number_str(hour(times[i])),'Z')
     if(latest[i]) fn = paste0(fn0,"metpplatest/met_analysis_1_0km_nordic_",timestampstr,".nc")
     if(operational_archive[i]) fn = paste0(fn0,"metpparchive/",year(times[i]),"/",number_str(month(times[i])),"/",number_str(mday(times[i])),"/met_analysis_1_0km_nordic_",timestampstr,".nc")
@@ -466,11 +475,29 @@ weather_variables = function() return(c('air_pressure_at_sea_level',
                                         'wind_speed_10m',
                                         'wind_direction_10m'))
 
-#' Names of all variables we can potentially get from netcdfs
-#' @examples
-#' all_variables()
+#' List files in the METPP-latest catalogue
+#'
+#' used for checking which files can already be downloaded.
+#'
+#' @import XML
 #' @export
 
-all_variables = function() return(sort(c(weather_variables(),"projection_lcc","forecast_reference_time","precipitation_amount_gt","precipitation_amount_quantiles","altitude","land_area_fraction")))
+which_files_exist_latest = function()
+{
+  catalogue = xmlParse(httr::GET("https://thredds.met.no/thredds/catalog/metpplatest/catalog.xml"))
+  xmllength = xmlSize(xmlRoot(catalogue)[[2]])
 
+  xmlnames = c()
+  for(i in 1:xmllength) {
+    xmlnames = c(xmlnames, XML::xmlName(XML::xmlRoot(catalogue)[[2]][[i]]))
+  }
 
+  fns = c()
+  for(i in 1:xmllength){
+    if(xmlnames[i] == 'dataset'){
+      fns = c(fns,xmlAttrs(xmlRoot(catalogue)[[2]][[i]])['ID'])
+    }
+  }
+
+  return(unname(fns))
+}

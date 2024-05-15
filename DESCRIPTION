@@ -12,9 +12,12 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends: data.table,
   ncdf4
-Imports: ggplot2,
+Imports: httr,
+  ggplot2,
+  ggmap,
   lubridate,
   RANN,
   stars,
-  utils
+  utils,
+  XML
 RoxygenNote: 7.2.3

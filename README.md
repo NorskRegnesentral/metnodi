@@ -18,7 +18,7 @@ area (in lon/lat). Moreover, downloads are pooled in time into either
 daily-, monthly-, yearly- or a single file, depending on the size of the
 downloaded area. This format is more convenient to work with than the
 original format, which is a single netcdf per hour. The package also has
-a function to plot the downloaded data.
+functions for plotting and loading the downloaded data.
 
 ## Installation
 
