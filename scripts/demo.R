@@ -1,7 +1,6 @@
 # install.packages("devtools")
-#devtools::install_github("NorskRegnesentral/metnodi")
-
-rm(list = ls())
+# devtools::install_github("NorskRegnesentral/metnodi")
+# rm(list = ls())
 
 devtools::load_all()
 

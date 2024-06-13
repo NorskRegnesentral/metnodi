@@ -10,7 +10,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-Depends: data.table,
+Depends: R (>= 4.1.0),
+  data.table,
   ncdf4
 Imports: httr,
   ggplot2,

@@ -315,7 +315,7 @@ get_metno_gridcells_rect = function(bbox)
 
   vector_indices = which(lons_nc %between% bbox[c(1,3)] & lats_nc %between% bbox[c(2,4)])
   if(length(vector_indices) == 0){
-    warning("No met Nordic gridcells contained in area.")
+    warning("No MET Nordic gridcells contained in area.")
     return(data.table())
   }
 
@@ -469,7 +469,6 @@ weather_variables = function() return(c('air_pressure_at_sea_level',
                                         'air_temperature_2m',
                                         'cloud_area_fraction',
                                         'integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time',
-                                        #'integral_of_surface_downwelling_longwave_flux_in_air_wrt_time', Left out, because it only exists for some times
                                         'precipitation_amount',
                                         'relative_humidity_2m',
                                         'wind_speed_10m',

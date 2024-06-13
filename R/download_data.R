@@ -21,7 +21,8 @@
 #' @inheritParams get_metno_gridcells_nn
 #' @inheritParams get_metno_gridcells_rect
 #' @param vars character vector of (weather) variables to load, see [weather_variables()] to see all available variables.
-#' @param discard_missing_locations logical. If TRUE (the default), then coordinates not falling within the met Nordic area are discarded.
+#' @param discard_missing_locations logical. If `TRUE` (the default), then coordinates not falling within the met Nordic area are discarded.
+#' If you put this to `FALSE`, the function will find a nearest neighbor for all gridcells, even if they are way outside the covered region.
 #' @param save_resolution Either `"auto"`, `"year"`, `"month"`, `"day"`, or `"hour"`, see details.
 #' @param max_filesize_in_MB File size limit (in MB) for the saved netcdfs. Only used if `save_resolution == 'auto'`.
 #' @param fns,nfiles,start_at For internal use only. Keep at default.
@@ -31,13 +32,13 @@
 #' The loaded data is saved either as single file or as yearly-, monthly-, daily-, or hourly files.
 #' The save format is determined by `save_resolution`. This can be either `year`, `month`, `day`, or `hour`
 #' (forcing the corresponding format), or `auto` (the default). When `auto` is selected, the files are saved in
-#' the largest format, such that single files remain (approximately) below the max size specified by `max_filesize_in_MB`.
+#' the largest format such that single files remain (approximately) below the max size specified by `max_filesize_in_MB`.
 #' In particular, if you want to force to save everything in a single file, you can set `save_resolution = 'auto'` and
 #' `max_filesize_in_MB = Inf` (but of course this may crash).
 #'
 #'@examples \dontrun{
 #' # Oslo city hall:
-#' data.table(lat = 59.912,lon = 10.733)
+#' coords = data.table(lat = 59.912,lon = 10.733)
 #'
 #' download_metno_analysis_nn(file_out = 'oslo_ch_prec_20240101.nc',
 #'                            out_dir = tempdir(),

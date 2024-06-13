@@ -7,6 +7,7 @@
 gmaps_plot(
   st,
   bbox = NULL,
+  var_name = NULL,
   downsample = "auto100",
   alpha = 0.7,
   tol = 0,
@@ -22,7 +23,9 @@ gmaps_plot(
 \item{bbox}{Optional bounding box in the form \code{c(lon_min, lat_min, lon_max, lat_max)} (always in lon/lat, no matter the CRS of \code{st}).
 If no bounding box is provided, it is derived from \code{st}. Values are approximate, see \code{tol}.}
 
-\item{downsample}{Should we downsample the data for faster plotting? Default is to downsample to get less than half a million pixels.
+\item{var_name}{Name of the variable/attribute in \code{st} that you want to plot. Default is to plot the first one.}
+
+\item{downsample}{Should we downsample the data for faster plotting? Default is to downsample to get less than 100.000 pixels.
 You can either provide a number (0 means no downsampling, 1 means every second value is kept etc.) or a string of the form
 \code{'auto<some number n>'} which will downsample to plot fewer than \code{n}*1000 points, so downsampling rate depends on the size of \code{st}.}
 
@@ -38,6 +41,8 @@ for plotting MET Nordic data, and to \code{'surf'} for plotting SURF data. Else,
 You can get the map by calling this function with \code{only_map = TRUE}.}
 
 \item{only_map}{Logical. If \code{TRUE}, only the googlemap is returned.}
+
+\item{...}{Passed on to \code{ggmap::get_map()}}
 }
 \description{
 This function take a \code{stars}-object and creates a single map-plot of the data, overlaying a googlemap.
