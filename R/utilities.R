@@ -81,10 +81,11 @@ est_fileout_size = function(nloc,ntime,nvars){
 #'
 #' @export
 
-exists_ts_latest = function(time){
+exists_ts_latest = function(time, forecast = FALSE){
+  version_char = ifelse(forecast, yes = 'forecast', no = 'analysis')
   fns = which_files_exist_latest()
-  analysis_time_stamps = fns[grepl('analysis',fns)] |> tail(-1) # first element is always "latest", which we don't deal with right now
-  analysis_time_stamps = gsub("metpplatest/met_analysis_1_0km_nordic_","",analysis_time_stamps) |> gsub(pattern = '.nc',replacement = '')
+  analysis_time_stamps = fns[grepl(version_char,fns)] |> tail(-1) # first element is always "latest", which we don't deal with right now
+  analysis_time_stamps = gsub(paste0("metpplatest/met_",version_char,"_1_0km_nordic_"),"",analysis_time_stamps) |> gsub(pattern = '.nc',replacement = '')
   analysis_time_stamps = as.POSIXct(analysis_time_stamps, tz = 'GMT',format = "%Y%m%dT%HZ")
   return(time %in% analysis_time_stamps)
 }
@@ -500,3 +501,89 @@ which_files_exist_latest = function()
 
   return(unname(fns))
 }
+
+
+
+
+
+#' Auxiliary function
+#'
+#' Fetches the forecast file name and the time-indices for netcdf subsetting.
+#' @param time_start As in [download_metno_analysis_nn()], but you can also put `'all'` for downloading all available future timestamps.
+#' @param time_end As in [download_metno_analysis_nn()].
+#' @param initialization_time Default is `'latest'`, which will download the most recent forecast. You can specify downloading older forecasts,
+#' by giving their initialization time (which is rounded to the full hour and passed to [as.GMT()]).
+
+get_fc_fn_and_times = function(time_start,
+                               time_end,
+                               initialization_time){
+
+  if(identical(initialization_time, 'latest')) {
+    fn = 'https://thredds.met.no/thredds/dodsC/metpplatest/met_forecast_1_0km_nordic_latest.nc'
+  } else {
+    number_str = function(numbers)
+    {
+      ret_val = as.character(numbers)
+      ret_val[numbers < 10] = paste0(0,ret_val[numbers < 10])
+      return(ret_val)
+    }
+
+    time = as.GMT(initialization_time)
+    time = round(time,"hours")-2
+    timestampstr = paste0(year(time),number_str(month(time)),number_str(mday(time)),'T',number_str(hour(time)),'Z')
+    fn = paste0("https://thredds.met.no/thredds/dodsC/metpplatest/met_forecast_1_0km_nordic_",timestampstr,".nc")
+  }
+
+  nc = nc_open(fn)
+  on.exit(nc_close(nc))
+  message('Loading the forecast with the following specifications:\n',
+          'history: ',ncatt_get(nc,0,"history")$value,'\n',
+          'meps_forecast_reference_time: ',ncatt_get(nc,0,'meps_forecast_reference_time')$value |> as.numeric() |> as.GMT(), ' UTC' )
+
+
+  # Get timestamps:
+  if(identical(time_start,'all')) {
+    times = ncvar_get(nc,'time')
+  } else if(is.null(time_end) & is_date(time_start)){  # for dates get all time-stamp during those dates:
+    times = date_hours(time_start)
+  } else if(is.null(time_end)){
+    times = as.GMT(time_start)
+    if(! all(c(second(times),minute(times)) == 0)){
+      warning("The times contain non-zero minutes and/or seconds, but the data is hourly. Times are rounded to the full hour.")
+      times = round(times,"hour")
+    }
+  } else {
+    time_start = as.GMT(time_start)[1]
+    if(is_date(time_end)){
+      time_end = tail(date_hours(time_end),1)
+    } else{
+      time_end = as.GMT(time_end)
+    }
+    times = seq.POSIXt(time_start, time_end, by = "1 hour")
+    if(! all(c(second(times),minute(times),second(time_end),minute(time_end)) == 0)){
+      warning("The times contain non-zero minutes and/or seconds, but the data is hourly. Times are rounded down to the next-lower full hour.")
+    }
+  }
+
+  times = sort(unique(times))
+  if('POSIXct' %in% is(times)) times = as.numeric(times, origin = '1970-01-01')
+
+  time_inds = match(times,ncvar_get(nc,'time'))
+  if(any(is.na(time_inds))) {
+    warning('Some requested times are not part of the forecast file')
+    time_inds = time_inds[!is.na(time_inds)]
+  }
+  if(length(time_inds) == 0) stop('Nothing to load')
+
+  time_start = min(time_inds)
+  time_length = max(time_inds) - min(time_inds) + 1
+  time_which = time_inds - min(time_inds) + 1
+
+
+  return(list(fn = fn,
+              time_start = time_start,
+              time_length = time_length,
+              time_which = time_which))
+
+}
+
