@@ -53,7 +53,8 @@ If \code{TRUE} (the default), the rerun archive is used (which uses one consiste
 
 \item{vars}{character vector of (weather) variables to load, see \code{\link[=weather_variables]{weather_variables()}} to see all available variables.}
 
-\item{discard_missing_locations}{logical. If TRUE (the default), then coordinates not falling within the met Nordic area are discarded.}
+\item{discard_missing_locations}{logical. If \code{TRUE} (the default), then coordinates not falling within the met Nordic area are discarded.
+If you put this to \code{FALSE}, the function will find a nearest neighbor for all gridcells, even if they are way outside the covered region.}
 
 \item{save_resolution}{Either \code{"auto"}, \code{"year"}, \code{"month"}, \code{"day"}, or \code{"hour"}, see details.}
 
@@ -78,14 +79,14 @@ Nearest neighbor matching is performed by \code{\link[=get_metno_gridcells_nn]{g
 The loaded data is saved either as single file or as yearly-, monthly-, daily-, or hourly files.
 The save format is determined by \code{save_resolution}. This can be either \code{year}, \code{month}, \code{day}, or \code{hour}
 (forcing the corresponding format), or \code{auto} (the default). When \code{auto} is selected, the files are saved in
-the largest format, such that single files remain (approximately) below the max size specified by \code{max_filesize_in_MB}.
+the largest format such that single files remain (approximately) below the max size specified by \code{max_filesize_in_MB}.
 In particular, if you want to force to save everything in a single file, you can set \code{save_resolution = 'auto'} and
 \code{max_filesize_in_MB = Inf} (but of course this may crash).
 }
 \examples{
 \dontrun{
 # Oslo city hall:
-data.table(lat = 59.912,lon = 10.733)
+coords = data.table(lat = 59.912,lon = 10.733)
 
 download_metno_analysis_nn(file_out = 'oslo_ch_prec_20240101.nc',
                            out_dir = tempdir(),

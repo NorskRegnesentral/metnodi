@@ -42,7 +42,7 @@ This is a basic example which shows you how to download data:
 ```{r example, eval = FALSE}
 library(metnodi)
 
-### downloading a rectangular area ###
+### downloading past analysis for a rectangular area ###
 
 # area around Oslo
 lon_min = 8
@@ -69,12 +69,28 @@ download_metno_analysis_rect(file_out = 'oslo_weather_202401.nc',
 coords = data.table(lon = runif(50,min = lon_min, max = lon_max),
                     lat = runif(50,min = lat_min, max = lat_max))
 
-download_metno_analysis_nn(file_out = 'oslo_weather_202401.nc', 
+download_metno_analysis_nn(file_out = 'random_locs_weather_202401.nc', 
                            out_dir = tempdir(),
                            coords = coords,
                            time_start = time_start,
                            time_end = time_end,
                            vars = 'precipitation_amount')
+
+
+### download latest forecasts ###
+
+download_metno_fc_rect(file_out = 'oslo_precip_fc.nc', 
+                       out_dir = tempdir(),
+                       bbox = c(lon_min,lat_min,lon_max,lat_max),
+                       time_start = 'all',
+                       initialization_time = 'latest')
+
+
+download_metno_fc_nn(file_out = 'random_locs_precip_fc.nc', 
+                     out_dir = tempdir(),
+                     coords = coords,
+                     time_start = 'all',
+                     initialization_time = 'latest')
 
 
 ### plotting ###

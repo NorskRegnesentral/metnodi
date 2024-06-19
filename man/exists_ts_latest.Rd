@@ -6,7 +6,7 @@
 \alias{exists_ts_rerun_archive}
 \title{In which data streams does a time stamp exist}
 \usage{
-exists_ts_latest(time)
+exists_ts_latest(time, forecast = FALSE)
 
 exists_ts_operational_archive(time)
 
